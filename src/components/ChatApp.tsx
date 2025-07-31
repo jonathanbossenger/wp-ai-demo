@@ -2,7 +2,7 @@
  * WordPress dependencies
  */
 import { useState, useRef, useEffect } from '@wordpress/element';
-import { Button, TextareaControl, Icon } from '@wordpress/components';
+import { Button, TextareaControl, Icon, SelectControl } from '@wordpress/components';
 import { arrowRight, trash, chevronDown, chevronUp } from '@wordpress/icons';
 
 /**
@@ -16,8 +16,16 @@ import {
 } from './ChatMessage';
 
 export const ChatApp = () => {
-	const { messages, sendMessage, isLoading, clearConversation } =
-		useConversation();
+	const { 
+		messages, 
+		sendMessage, 
+		isLoading, 
+		clearConversation,
+		availableModels,
+		selectedModel,
+		setSelectedModel,
+		provider
+	} = useConversation();
 	const [ input, setInput ] = useState( '' );
 	const [ isMinimized, setIsMinimized ] = useState( false );
 	const messagesEndRef = useRef< HTMLDivElement | null >( null );
@@ -51,7 +59,16 @@ export const ChatApp = () => {
 	return (
 		<div className={ `chat-container${ isMinimized ? ' minimized' : '' }` }>
 			<div className="chat-header">
-				<h2>AI Agent</h2>
+				<div className="chat-header-title">
+					<h2>AI Agent</h2>
+					<div className="provider-info">
+						{ provider && (
+							<span className="provider-badge">
+								{ provider === 'anthropic' ? 'Anthropic' : 'OpenAI' }
+							</span>
+						) }
+					</div>
+				</div>
 				<div className="chat-header-actions">
 					<Button
 						onClick={ clearConversation }
@@ -73,6 +90,20 @@ export const ChatApp = () => {
 					/>
 				</div>
 			</div>
+			{ ! isMinimized && availableModels.length > 0 && (
+				<div className="chat-model-selector">
+					<SelectControl
+						label="Model"
+						value={ selectedModel }
+						options={ availableModels.map( ( model ) => ( {
+							label: model.id,
+							value: model.id,
+						} ) ) }
+						onChange={ setSelectedModel }
+						__nextHasNoMarginBottom
+					/>
+				</div>
+			) }
 			<div className="chat-body">
 				<div className="chat-messages">
 					{ messages.map( ( msg, index ) => {

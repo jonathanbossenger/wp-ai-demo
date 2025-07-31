@@ -45,19 +45,37 @@
 	border-radius: 12px 12px 0 0;
 	min-height: 48px;
 
-	h2 {
-		color: #ffffff;
-		margin: 0;
-		font-size: 14px;
-		font-weight: 600;
+	.chat-header-title {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: 8px;
 
-		svg {
-			width: 18px !important;
-			height: 18px !important;
-			fill: currentColor !important;
+		h2 {
+			color: #ffffff;
+			margin: 0;
+			font-size: 14px;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+
+			svg {
+				width: 18px !important;
+				height: 18px !important;
+				fill: currentColor !important;
+			}
+		}
+
+		.provider-info {
+			.provider-badge {
+				background: rgba(255, 255, 255, 0.2);
+				color: #ffffff;
+				padding: 2px 6px;
+				border-radius: 4px;
+				font-size: 11px;
+				font-weight: 500;
+				text-transform: uppercase;
+			}
 		}
 	}
 
@@ -91,6 +109,32 @@
 			height: 18px !important;
 			fill: currentColor !important;
 		}
+	}
+}
+
+.chat-model-selector {
+	padding: 8px 12px;
+	background: #ffffff;
+	border-bottom: 1px solid #dcdcde;
+
+	.components-base-control {
+		margin-bottom: 0;
+	}
+
+	.components-base-control__field {
+		margin-bottom: 0;
+	}
+
+	.components-select-control__input {
+		font-size: 13px;
+		padding: 4px 8px;
+	}
+
+	label {
+		font-size: 12px;
+		font-weight: 500;
+		color: #1e1e1e;
+		margin-bottom: 4px;
 	}
 }
 

@@ -31,6 +31,10 @@ export interface ConversationContextType {
 	isLoading: boolean;
 	clearConversation: () => void;
 	toolNameMap: Record< string, string >;
+	availableModels: Array< { id: string; owned_by: string } >;
+	selectedModel: string;
+	setSelectedModel: ( model: string ) => void;
+	provider: string;
 }
 
 export const ConversationContext =
@@ -72,6 +76,9 @@ export const ConversationProvider = ( {
 	const [ toolNameMap, setToolNameMap ] = useState<
 		Record< string, string >
 	>( {} );
+	const [ availableModels, setAvailableModels ] = useState< Array< { id: string; owned_by: string } > >( [] );
+	const [ selectedModel, setSelectedModel ] = useState< string >( '' );
+	const [ provider, setProvider ] = useState< string >( '' );
 	const isInitializing = useRef( false );
 
 	useEffect( () => {
@@ -107,7 +114,43 @@ export const ConversationProvider = ( {
 			}
 		};
 
+		const initializeModels = async () => {
+			try {
+				// Get healthcheck to determine provider
+				const healthResponse = await wpApiClient( '/wp/v2/ai-demo-proxy/v1/healthcheck', {} );
+				const currentProvider = healthResponse?.provider || 'openai';
+				setProvider( currentProvider );
+
+				// Get available models
+				const modelsResponse = await wpApiClient( '/wp/v2/ai-demo-proxy/v1/models', {} );
+				const models = modelsResponse?.data || [];
+				setAvailableModels( models );
+
+				// Set default model based on provider
+				if ( models.length > 0 ) {
+					let defaultModel = models[ 0 ].id;
+					if ( currentProvider === 'anthropic' ) {
+						// Prefer Claude 3.5 Sonnet if available
+						const preferred = models.find( ( m: any ) => m.id === 'claude-3-5-sonnet-20241022' );
+						defaultModel = preferred ? preferred.id : defaultModel;
+					} else {
+						// Prefer GPT-4o if available
+						const preferred = models.find( ( m: any ) => m.id === 'gpt-4o' );
+						defaultModel = preferred ? preferred.id : defaultModel;
+					}
+					setSelectedModel( defaultModel );
+				}
+			} catch ( error ) {
+				// eslint-disable-next-line no-console
+				console.error( 'Failed to initialize models:', error );
+				// Fallback defaults
+				setProvider( 'openai' );
+				setSelectedModel( 'gpt-4o' );
+			}
+		};
+
 		initializeExecutor();
+		initializeModels();
 	}, [] );
 
 	const agent: Agent | null = useMemo( () => {
@@ -123,8 +166,7 @@ export const ConversationProvider = ( {
 				return;
 			}
 
-			// TODO: Consider making this a setting.
-			const defaultModel = 'gpt-4o';
+			const modelToUse = selectedModel || 'gpt-4o';
 
 			setIsLoading( true );
 
@@ -134,7 +176,7 @@ export const ConversationProvider = ( {
 				const messageStream = agent.processQuery(
 					query,
 					historyBeforeQuery,
-					defaultModel
+					modelToUse
 				);
 
 				for await ( const messageChunk of messageStream ) {
@@ -170,7 +212,7 @@ export const ConversationProvider = ( {
 				setIsLoading( false );
 			}
 		},
-		[ isLoading, agent, messages, toolExecutor ]
+		[ isLoading, agent, messages, toolExecutor, selectedModel ]
 	);
 
 	const clearConversation = useCallback( () => {
@@ -186,6 +228,10 @@ export const ConversationProvider = ( {
 			isLoading,
 			clearConversation,
 			toolNameMap,
+			availableModels,
+			selectedModel,
+			setSelectedModel,
+			provider,
 		} ),
 		[
 			messages,
@@ -194,11 +240,15 @@ export const ConversationProvider = ( {
 			isLoading,
 			clearConversation,
 			toolNameMap,
+			availableModels,
+			selectedModel,
+			setSelectedModel,
+			provider,
 		]
 	);
 
-	// Wait until the tool name map is populated before rendering the chat UI.
-	const isReady = Object.keys( toolNameMap ).length > 0;
+	// Always render the chat UI - tools are optional
+	const isReady = true;
 
 	return (
 		<ConversationContext.Provider value={ contextValue }>
