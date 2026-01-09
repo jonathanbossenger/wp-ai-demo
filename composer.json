@@ -1,0 +1,14 @@
+{
+    "name": "jonathanbossenger/wp-ai-demo",
+    "description": "A demo plugin showcasing the core AI building blocks",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require-dev": {
+        "wp-coding-standards/wpcs": "^3.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}
